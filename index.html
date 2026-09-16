@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f0f23">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>چت‌بات ارتقاء بازی | hamidshariati.ir</title>
+    <link rel="manifest" href="/games/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/games/icon.svg">
+    <link rel="apple-touch-icon" href="/games/icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: #0f0f23; 
+            color: #e2e8f0; 
+            height: 100%; 
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .app { display: flex; height: 100%; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0a0a1a;
+            border-left: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0a0a1a;
+        }
+        
+        .sidebar-title { font-size: 1rem; font-weight: 600; color: #94a3b8; }
+        
+        .new-chat-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #22d3ee, #a855f7);
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .section-title {
+            font-size: 0.7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            padding: 12px 16px 6px;
+            letter-spacing: 0.5px;
+        }
+        
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            padding: 0 8px;
+        }
+        
+        .game-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #e2e8f0;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            width: 100%;
+            text-align: right;
+        }
+        
+        .game-link:hover, .game-link:active { background: #1e293b; }
+        
+        .game-link.selected { background: #164e63; border-color: #22d3ee; }
+        .game-link.selected .game-name { color: #22d3ee; }
+        .game-check { display: none; color: #22d3ee; font-size: 0.9rem; }
+        .game-link.selected .game-check { display: block; }
+        
+        .game-icon { font-size: 1.3rem; width: 28px; text-align: center; }
+        .game-name { flex: 1; }
+        
+        .new-game-link {
+            border: 1px dashed #475569;
+            color: #94a3b8;
+        }
+        
+        .new-game-link:hover, .new-game-link:active { border-color: #22d3ee; color: #22d3ee; }
+        
+        .bug-report-link {
+            color: #f87171;
+            border: 1px dashed #f8717140;
+        }
+        
+        .bug-report-link:hover, .bug-report-link:active { 
+            background: #7f1d1d20; 
+            border-color: #f87171; 
+        }
+        
+        .chat-list {
+            display: flex;
+            flex-direction: column;
+            padding: 0 8px 8px;
+        }
+        
+        .chat-item {
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 2px;
+        }
+        
+        .chat-item:hover, .chat-item:active { background: #1e293b; }
+        .chat-item.active { background: #164e63; }
+        
+        .chat-item-title {
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .chat-item-meta {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 4px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .chat-item-game {
+            background: #334155;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+        }
+        
+        .chat-item-delete {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 2px;
+        }
+        
+        .chat-item-delete:hover { color: #ef4444; }
+        
+        .sidebar-footer {
+            padding: 12px 16px;
+            border-top: 1px solid #1e293b;
+            font-size: 0.7rem;
+            color: #475569;
+            text-align: center;
+        }
+        
+        /* Main chat */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: #0f0f23;
+        }
+        
+        .chat-header {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        
+        .menu-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .view-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .view-btn:hover { background: #334155; color: #22d3ee; border-color: #22d3ee; }
+        
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22d3ee, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .chat-header-info { flex: 1; min-width: 0; }
+        .chat-header-name { font-weight: 600; font-size: 0.95rem; color: #f1f5f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-header-status { font-size: 0.75rem; color: #22d3ee; }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            animation: fadeIn 0.2s ease;
+            font-size: 0.9rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message-user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-assistant {
+            align-self: flex-start;
+            background: #1e293b;
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #334155;
+        }
+        
+        .message-system {
+            align-self: center;
+            background: transparent;
+            color: #64748b;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+        
+        .message-bug {
+            align-self: flex-start;
+            background: #7f1d1d30;
+            color: #fca5a5;
+            border: 1px solid #f8717140;
+            border-radius: 14px;
+        }
+        
+        .typing-indicator {
+            padding: 10px 14px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            width: fit-content;
+            align-self: flex-start;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        
+        .chat-input-area {
+            padding: 10px 12px;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            flex-shrink: 0;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .quick-btn {
+            padding: 6px 10px;
+            background: #334155;
+            border: 1px solid #475569;
+            border-radius: 16px;
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .quick-btn:hover, .quick-btn:active {
+            background: #475569;
+            border-color: #22d3ee;
+            color: #22d3ee;
+        }
+        
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        
+        .input-wrapper {
+            flex: 1;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 22px;
+            display: flex;
+            align-items: flex-end;
+            padding: 4px 8px;
+            min-height: 44px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 8px;
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: none;
+            max-height: 80px;
+            min-height: 28px;
+            outline: none;
+            line-height: 1.4;
+        }
+        
+        .chat-input::placeholder { color: #64748b; }
+        
+        .input-actions {
+            display: flex;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        
+        .input-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        
+        .input-btn:hover, .input-btn:active { background: #334155; color: #22d3ee; }
+        .input-btn.recording { background: #dc2626; color: white; }
+        
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #22d3ee, #a855f7);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .send-btn:hover { transform: scale(1.05); }
+        .send-btn:disabled { background: #475569; cursor: not-allowed; transform: none; }
+        .send-btn svg { width: 18px; height: 18px; }
+        
+        .game-selector {
+            display: none;
+            padding: 8px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .game-selector.visible { display: block; }
+        .game-selector-title { color: #94a3b8; font-size: 0.75rem; margin-bottom: 6px; }
+        .game-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+        
+        .game-chip {
+            padding: 5px 10px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .game-chip:hover, .game-chip:active { border-color: #22d3ee; }
+        .game-chip.selected { background: #164e63; border-color: #22d3ee; color: #22d3ee; }
+        
+        .hidden { display: none !important; }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: 85%;
+                max-width: 320px;
+                transform: translateX(100%);
+            }
+            .sidebar.open { transform: translateX(0); }
+            
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                z-index: 99;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s;
+            }
+            .sidebar-overlay.open { opacity: 1; pointer-events: auto; }
+            
+            .menu-btn { display: flex; }
+            
+            .chat-messages { padding: 12px; }
+            .message { max-width: 90%; }
+            .chat-input-area { padding: 8px; }
+            .quick-btn { padding: 6px 8px; font-size: 0.75rem; }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-header { padding: 10px 12px; }
+            .chat-header-avatar { width: 36px; height: 36px; font-size: 1rem; }
+            .chat-header-name { font-size: 0.85rem; }
+            .input-btn { width: 28px; height: 28px; font-size: 0.9rem; }
+            .send-btn { width: 40px; height: 40px; }
+        }
+        
+        /* Safe area for notch */
+        @supports (padding: env(safe-area-inset-bottom)) {
+            .chat-input-area { padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+            .sidebar-footer { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+        
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-title">منو</span>
+                <button class="new-chat-btn" onclick="newChat()" title="چت جدید">+</button>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="section-title">موضوع فعال</div>
+                <div class="games-list">
+                    <button class="game-link selected" data-target="snake" onclick="selectTarget('snake', '🐍 مار نئون', '/game-platform/')">
+                        <span class="game-icon">🐍</span>
+                        <span class="game-name">مار نئون</span>
+                        <span class="game-check">✓</span>
+                    </button>
+                    <button class="game-link" data-target="game2" onclick="selectTarget('game2', '🎲 بازی کلمات', '/games/game2/web/')">
+                        <span class="game-icon">🎲</span>
+                        <span class="game-name">بازی کلمات</span>
+                        <span class="game-check">✓</span>
+                    </button>
+                    <button class="game-link" data-target="game1" onclick="selectTarget('game1', '🎯 بازی ۱', '/games/game1/builds/v1.0/')">
+                        <span class="game-icon">🎯</span>
+                        <span class="game-name">بازی ۱</span>
+                        <span class="game-check">✓</span>
+                    </button>
+                    <button class="game-link new-game-link" onclick="requestNewGame()">
+                        <span class="game-icon">✨</span>
+                        <span class="game-name" id="new-item-text">بازی جدید</span>
+                    </button>
+                </div>
+                
+                <div class="section-title">تاریخچه چت</div>
+                <div class="chat-list" id="chat-list"></div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="game-link bug-report-link" onclick="requestBugReport()" style="width:100%">
+                    <span class="game-icon">🐛</span>
+                    <span class="game-name">گزارش خطا</span>
+                </button>
+                <div style="margin-top:8px">hamidshariati.ir © 2026</div>
+            </div>
+        </aside>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <button class="menu-btn" onclick="toggleSidebar(true)">☰</button>
+                <div class="chat-header-avatar">د</div>
+                <div class="chat-header-info">
+                    <div class="chat-header-name" id="chat-title">🐍 مار نئون</div>
+                    <div class="chat-header-status" id="status-text">آنلاین</div>
+                </div>
+                <button class="view-btn" onclick="viewTarget()" title="مشاهده نتیجه">👁️</button>
+            </div>
+            
+            <div class="chat-messages" id="messages">
+                <div class="message message-system">درخواستت رو بگو، دانا اجرا می‌کنه 🎮</div>
+            </div>
+            
+            <div class="chat-input-area">
+                <div class="game-selector" id="game-selector">
+                    <div class="game-selector-title">بازی مورد نظر:</div>
+                    <div class="game-chips">
+                        <span class="game-chip selected" data-game="snake">🐍 مار نئون</span>
+                        <span class="game-chip" data-game="game1">🎯 بازی ۱</span>
+                        <span class="game-chip" data-game="game2">🎲 بازی کلمات</span>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="quick-btn" data-msg="می‌خوام یه قدرت ویژه اضافه بشه">+ قدرت ویژه</button>
+                    <button class="quick-btn" data-msg="می‌خوام صدا اضافه بشه">+ صدا</button>
+                    <button class="quick-btn" data-msg="می‌خوام تم جدید بیاد">+ تم جدید</button>
+                    <button class="quick-btn" data-msg="یه باگ هست که باید رفع بشه">رفع باگ</button>
+                    <button class="quick-btn" data-msg="می‌خوام بازی موبایل‌فرندلی بشه">📱 موبایل</button>
+                </div>
+                
+                <div class="chat-input-row">
+                    <div class="input-wrapper">
+                        <textarea class="chat-input" id="messageInput" placeholder="درخواستت رو بنویس یا بگو..." rows="1"></textarea>
+                        <div class="input-actions">
+                            <button class="input-btn" id="voice-btn" title="تبدیل صدا به متن">🎤</button>
+                        </div>
+                    </div>
+                    <button class="send-btn" id="sendBtn" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messagesEl = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voice-btn');
+        const gameSelector = document.getElementById('game-selector');
+        const statusText = document.getElementById('status-text');
+        const chatTitle = document.getElementById('chat-title');
+        const chatList = document.getElementById('chat-list');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        
+        const API_URL = window.location.origin;
+        const CHAT_KEY = 'chatbot_chats';
+        const BUG_KEY = 'chatbot_bugs';
+        
+        let currentChatId = null;
+        let currentMode = 'chat'; // 'chat' | 'bug'
+        let messages = [];
+        let isLoading = false;
+        let selectedGames = ['snake'];
+        let recognition = null;
+        let isRecording = false;
+        let botName = 'دانا';
+        let newItemText = 'بازی جدید'; // Context-aware text
+        
+        // Target selection
+        let currentTarget = { id: 'snake', name: '🐍 مار نئون', url: '/game-platform/' };
+
+        function getNewItemText() {
+            const topic = CONFIG.topic || 'games';
+            const texts = {
+                'games': 'بازی جدید',
+                'religion': 'سوال جدید',
+                'education': 'موضوع جدید',
+                'custom': 'جدید'
+            };
+            return texts[topic] || 'جدید';
+        }
+
+        function selectTarget(id, name, url) {
+            currentTarget = { id, name, url };
+            selectedGames = [id];
+            
+            // Update UI
+            document.querySelectorAll('.game-link[data-target]').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.target === id);
+            });
+            
+            // Update header
+            chatTitle.textContent = name;
+            
+            // Show in chat
+            addMessage('system', `موضوع: ${name} انتخاب شد`);
+            
+            toggleSidebar(false);
+        }
+
+        function viewTarget() {
+            if (currentTarget.url) {
+                window.open(currentTarget.url, '_blank');
+            }
+        }
+
+        // ========== Storage ==========
+        function getChats() { try { return JSON.parse(localStorage.getItem(CHAT_KEY) || '[]'); } catch(e) { return []; } }
+        function saveChats(c) { localStorage.setItem(CHAT_KEY, JSON.stringify(c)); }
+        function getBugs() { try { return JSON.parse(localStorage.getItem(BUG_KEY) || '[]'); } catch(e) { return []; } }
+        function saveBugs(b) { localStorage.setItem(BUG_KEY, JSON.stringify(b)); }
+
+        // ========== Chat Operations ==========
+        function saveCurrentChat() {
+            if (!currentChatId || messages.length === 0) return;
+            const chats = getChats();
+            const firstMsg = messages.find(m => m.role === 'user');
+            const title = firstMsg ? firstMsg.content.slice(0, 40) : 'چت جدید';
+            const gameNames = { 'snake': '🐍 مار نئون', 'game1': '🎯 بازی ۱', 'game2': '🎲 بازی کلمات' };
+            
+            const data = {
+                id: currentChatId, title, 
+                game: gameNames[selectedGames[0]] || selectedGames[0],
+                games: [...selectedGames], messages: [...messages], updated: Date.now()
+            };
+            
+            const idx = chats.findIndex(c => c.id === currentChatId);
+            if (idx >= 0) Object.assign(chats[idx], data);
+            else chats.unshift(data);
+            if (chats.length > 50) chats.length = 50;
+            saveChats(chats);
+            renderChatList();
+        }
+
+        function loadChat(chatId) {
+            const chat = getChats().find(c => c.id === chatId);
+            if (!chat) return;
+            currentChatId = chat.id;
+            currentMode = 'chat';
+            messages = [...chat.messages];
+            selectedGames = [...(chat.games || ['snake'])];
+            document.querySelectorAll('.game-chip').forEach(c => c.classList.toggle('selected', selectedGames.includes(c.dataset.game)));
+            chatTitle.textContent = chat.title;
+            gameSelector.classList.add('visible');
+            renderMessages();
+            renderChatList();
+            toggleSidebar(false);
+        }
+
+        function newChat() {
+            if (messages.length > 0 && currentMode === 'chat') saveCurrentChat();
+            currentChatId = 'chat_' + Date.now();
+            currentMode = 'chat';
+            messages = [];
+            selectedGames = ['snake'];
+            document.querySelectorAll('.game-chip').forEach(c => c.classList.toggle('selected', c.dataset.game === 'snake'));
+            chatTitle.textContent = 'چت جدید';
+            gameSelector.classList.add('visible');
+            messagesEl.innerHTML = `<div class="message message-system">درخواستت رو بگو، ${botName} اجرا می‌کنه 🎮</div>`;
+            renderChatList();
+            toggleSidebar(false);
+        }
+
+        function deleteChat(id, e) {
+            e.stopPropagation();
+            saveChats(getChats().filter(c => c.id !== id));
+            if (currentChatId === id) newChat(); else renderChatList();
+        }
+
+        // ========== New Game Request ==========
+        function requestNewGame() {
+            const newItem = getNewItemText();
+            
+            // Reset mode
+            currentMode = 'chat';
+            currentChatId = 'chat_' + Date.now();
+            messages = [];
+            
+            // Deselect all games
+            document.querySelectorAll('.game-link[data-target]').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            currentTarget = { id: null, name: newItem, url: null };
+            selectedGames = [];
+            
+            chatTitle.textContent = `✨ ${newItem}`;
+            messagesEl.innerHTML = `
+                <div class="message message-system">${newItem} جدید می‌خوای؟</div>
+                <div class="message message-system">توضیح بده تا بسازمش.</div>
+            `;
+            renderChatList();
+            toggleSidebar(false);
+            messageInput.focus();
+        }
+
+        // ========== Bug Report ==========
+        let lastScreenshot = null;
+
+        async function captureScreenshot() {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = window.innerWidth * 2;
+                canvas.height = window.innerHeight * 2;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(2, 2);
+                
+                ctx.fillStyle = '#0f0f23';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.font = '14px Segoe UI, Tahoma, sans-serif';
+                ctx.fillStyle = '#e2e8f0';
+                ctx.fillText(`Screenshot: ${new Date().toLocaleTimeString('fa-IR')}`, 20, 30);
+                ctx.fillText(`URL: ${window.location.pathname}`, 20, 50);
+                
+                const messages = document.querySelectorAll('.message');
+                let y = 80;
+                messages.forEach(msg => {
+                    const isUser = msg.classList.contains('message-user');
+                    const text = msg.textContent;
+                    ctx.fillStyle = isUser ? '#0ea5e9' : '#1e293b';
+                    const boxWidth = Math.min(ctx.measureText(text).width + 20, canvas.width / 2 - 40);
+                    if (isUser) {
+                        ctx.fillRect(canvas.width / 2 - boxWidth - 16, y, boxWidth, 28);
+                    } else {
+                        ctx.fillRect(16, y, boxWidth, 28);
+                    }
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fillText(text.slice(0, 60), isUser ? canvas.width / 2 - boxWidth - 6 : 26, y + 18);
+                    y += 36;
+                });
+                
+                return canvas.toDataURL('image/png').split(',')[1];
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function requestBugReport() {
+            // Capture screenshot first
+            lastScreenshot = await captureScreenshot();
+            
+            if (messages.length > 0 && currentMode === 'chat') saveCurrentChat();
+            currentChatId = 'bug_' + Date.now();
+            currentMode = 'bug';
+            messages = [];
+            gameSelector.classList.remove('visible');
+            chatTitle.textContent = '🐛 گزارش خطا';
+            
+            let screenshotHtml = '';
+            if (lastScreenshot) {
+                screenshotHtml = `<div class="message message-system"><img src="data:image/png;base64,${lastScreenshot}" style="max-width:100%;border-radius:8px;margin-top:8px;" /></div>`;
+            }
+            
+            messagesEl.innerHTML = `
+                <div class="message message-system">اسکرین‌شات صفحه گرفته شد 👆</div>
+                ${screenshotHtml}
+                <div class="message message-system">کدوم بازی مشکل داره؟</div>
+                <div class="message message-system">یا مستقیم بگو چه باگی هست.</div>
+            `;
+            renderChatList();
+            toggleSidebar(false);
+            messageInput.focus();
+        }
+
+        function getBrowserData() {
+            return {
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                screen: { width: screen.width, height: screen.height, colorDepth: screen.colorDepth },
+                viewport: { width: window.innerWidth, height: window.innerHeight },
+                timestamp: new Date().toISOString(),
+                localStorage_keys: Object.keys(localStorage).filter(k => k.startsWith('chatbot_')),
+                cookies: document.cookie
+            };
+        }
+
+        async function captureScreenshot() {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = window.innerWidth * 2;
+                canvas.height = window.innerHeight * 2;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(2, 2);
+                
+                // Draw background
+                ctx.fillStyle = '#0f0f23';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw messages area
+                const messages = document.querySelectorAll('.message');
+                let y = 60;
+                ctx.font = '14px Segoe UI, Tahoma, sans-serif';
+                
+                messages.forEach(msg => {
+                    const isUser = msg.classList.contains('message-user');
+                    const text = msg.textContent;
+                    const maxWidth = canvas.width / 2 - 40;
+                    
+                    ctx.fillStyle = isUser ? '#0ea5e9' : '#1e293b';
+                    const textWidth = ctx.measureText(text).width;
+                    const boxWidth = Math.min(textWidth + 20, maxWidth);
+                    
+                    if (isUser) {
+                        ctx.fillRect(canvas.width / 2 - boxWidth - 16, y, boxWidth, 30);
+                    } else {
+                        ctx.fillRect(16, y, boxWidth, 30);
+                    }
+                    
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fillText(text.slice(0, 50), isUser ? canvas.width / 2 - boxWidth - 6 : 26, y + 20);
+                    y += 40;
+                });
+                
+                return canvas.toDataURL('image/png').split(',')[1];
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function saveBugReport(description) {
+            const browserData = getBrowserData();
+            const screenshot = await captureScreenshot();
+            
+            const bugs = getBugs();
+            bugs.unshift({
+                id: currentChatId,
+                description,
+                messages: [...messages],
+                browserData,
+                screenshot,
+                created: Date.now(),
+                status: 'open'
+            });
+            if (bugs.length > 100) bugs.length = 100;
+            saveBugs(bugs);
+        }
+
+        function requestBugFix() {
+            const bugs = getBugs().filter(b => b.status === 'open');
+            if (bugs.length === 0) {
+                addMessage('assistant', 'گزارش خطاie‌ای ثبت نشده.');
+                return;
+            }
+            let text = 'گزارش‌های خطا:\n\n';
+            bugs.forEach((b, i) => {
+                const device = b.browserData ? `${b.browserData.screen?.width}x${b.browserData.screen?.height}` : 'نامشخص';
+                text += `${i+1}. ${b.description.slice(0, 50)}... (${device})\n`;
+            });
+            text += '\nکدوم رو می‌خوای اصلاح کنم؟';
+            addMessage('assistant', text);
+        }
+
+        // ========== Messages ==========
+        function renderMessages() {
+            messagesEl.innerHTML = messages.length === 0 
+                ? `<div class="message message-system">درخواستت رو بگو، ${botName} اجرا می‌کنه 🎮</div>`
+                : '';
+            messages.forEach(msg => {
+                const el = document.createElement('div');
+                el.className = `message message-${msg.role}`;
+                el.textContent = msg.content;
+                messagesEl.appendChild(el);
+            });
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function addMessage(role, content) {
+            messages.push({ role, content, timestamp: Date.now() });
+            if (currentMode === 'bug' && role === 'user') saveBugReport(content);
+            else if (currentMode === 'chat') saveCurrentChat();
+            
+            const el = document.createElement('div');
+            el.className = `message message-${role}`;
+            el.textContent = content;
+            messagesEl.appendChild(el);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function showTyping(msg) {
+            isLoading = true;
+            sendBtn.disabled = true;
+            statusText.textContent = msg || 'در حال پردازش...';
+            let el = document.getElementById('typing');
+            if (!el) {
+                el = document.createElement('div');
+                el.className = 'typing-indicator';
+                el.id = 'typing';
+                messagesEl.appendChild(el);
+            }
+            el.textContent = msg || 'در حال ارسال...';
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function hideTyping() {
+            isLoading = false;
+            sendBtn.disabled = !messageInput.value.trim();
+            statusText.textContent = 'آنلاین';
+            document.getElementById('typing')?.remove();
+        }
+
+        // ========== Send ==========
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || isLoading) return;
+            
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            sendBtn.disabled = true;
+            addMessage('user', text);
+            
+            if (currentMode === 'bug') {
+                showTyping('در حال بررسی خطا...');
+                setTimeout(() => {
+                    hideTyping();
+                    addMessage('assistant', `گزارش خطا ثبت شد: "${text.slice(0, 50)}..."\n\nوقتی خواستی اصلاحات رو انجام بدم، بگو "اصلاح خطا" تا لیست رو نشونت بدم.`);
+                }, 1000);
+                return;
+            }
+            
+            showTyping('در حال ارسال...');
+            try {
+                const res = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, games: selectedGames }),
+                });
+                const data = await res.json();
+                if (!data.jobId) { hideTyping(); addMessage('assistant', 'خطا در ارسال.'); return; }
+                showTyping('در صف پردازش...');
+                await pollForResponse(data.jobId);
+            } catch (err) {
+                hideTyping();
+                addMessage('assistant', 'خطا: ' + err.message);
+            }
+        }
+
+        async function pollForResponse(jobId, attempt = 0) {
+            if (attempt >= 60) { hideTyping(); addMessage('assistant', 'پاسخی دریافت نشد.'); return; }
+            await new Promise(r => setTimeout(r, 1500));
+            try {
+                const res = await fetch(`${API_URL}/status/${jobId}`);
+                const data = await res.json();
+                if (data.status === 'done') { hideTyping(); addMessage('assistant', data.response); return; }
+                if (data.status === 'error' || data.status === 'timeout') { hideTyping(); addMessage('assistant', data.response || 'خطا.'); return; }
+                if (data.status === 'waiting') showTyping('در حال پردازش...');
+                await pollForResponse(jobId, attempt + 1);
+            } catch (e) { await pollForResponse(jobId, attempt + 1); }
+        }
+
+        // ========== Sidebar ==========
+        function toggleSidebar(open) {
+            const isOpen = open !== undefined ? open : !sidebar.classList.contains('open');
+            sidebar.classList.toggle('open', isOpen);
+            sidebarOverlay.classList.toggle('open', isOpen);
+        }
+
+        function renderChatList() {
+            const chats = getChats();
+            chatList.innerHTML = chats.map(c => `
+                <div class="chat-item ${c.id === currentChatId ? 'active' : ''}" onclick="loadChat('${c.id}')">
+                    <div class="chat-item-title">${esc(c.title)}</div>
+                    <div class="chat-item-meta">
+                        <span class="chat-item-game">${c.game || ''}</span>
+                        <span>${timeAgo(c.updated)}</span>
+                        <button class="chat-item-delete" onclick="deleteChat('${c.id}', event)">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function esc(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        function timeAgo(ts) {
+            if (!ts) return '';
+            const diff = Date.now() - ts;
+            if (diff < 60000) return 'الان';
+            if (diff < 3600000) return Math.floor(diff/60000) + ' دقیقه';
+            if (diff < 86400000) return Math.floor(diff/3600000) + ' ساعت';
+            return new Date(ts).toLocaleDateString('fa-IR');
+        }
+
+        // ========== Events ==========
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 80) + 'px';
+            sendBtn.disabled = !messageInput.value.trim();
+        });
+
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                messageInput.value = btn.dataset.msg;
+                messageInput.dispatchEvent(new Event('input'));
+                messageInput.focus();
+            });
+        });
+
+        document.querySelectorAll('.game-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                chip.classList.toggle('selected');
+                selectedGames = Array.from(document.querySelectorAll('.game-chip.selected')).map(c => c.dataset.game);
+                if (!selectedGames.length) { chip.classList.add('selected'); selectedGames = [chip.dataset.game]; }
+            });
+        });
+
+        // ========== Voice ==========
+        function setupVoice() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (SR) {
+                // Web Speech API supported - real-time transcription
+                recognition = new SR();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'fa-IR';
+                
+                let lastTranscript = '';
+                
+                recognition.onstart = () => { 
+                    isRecording = true; 
+                    lastTranscript = '';
+                    voiceBtn.classList.add('recording'); 
+                };
+                recognition.onresult = (e) => {
+                    const result = e.results[e.results.length - 1];
+                    const transcript = result[0].transcript;
+                    
+                    // Only add if it's new text
+                    if (transcript !== lastTranscript) {
+                        const newText = transcript.slice(lastTranscript.length);
+                        if (newText) {
+                            messageInput.value += (messageInput.value ? ' ' : '') + newText;
+                            messageInput.dispatchEvent(new Event('input'));
+                        }
+                        lastTranscript = transcript;
+                    }
+                };
+                recognition.onend = () => { 
+                    isRecording = false; 
+                    voiceBtn.classList.remove('recording'); 
+                };
+                recognition.onerror = (e) => { 
+                    isRecording = false; 
+                    voiceBtn.classList.remove('recording');
+                    if (e.error === 'not-allowed') {
+                        addMessage('system', 'دسترسی میکروفون رد شد.');
+                    } else if (e.error === 'no-speech') {
+                        addMessage('system', 'صدایی شنیده نشد. دوباره امتحان کن.');
+                    }
+                };
+                voiceBtn.addEventListener('click', () => { 
+                    if (isRecording) {
+                        recognition.stop();
+                    } else {
+                        lastTranscript = '';
+                        recognition.start();
+                    }
+                });
+            } else {
+                // No Web Speech API - show message
+                voiceBtn.style.opacity = '0.5';
+                voiceBtn.title = 'تبدیل صدا در این مرورگر پشتیبانی نمی‌شود';
+                voiceBtn.addEventListener('click', () => {
+                    addMessage('system', 'مرورگر شما از تبدیل صدا به متن پشتیبانی نمی‌کند.\n\nلطفاً از Chrome Android استفاده کنید یا متن تایپ کنید.');
+                });
+            }
+        }
+
+        // ========== Init ==========
+        async function init() {
+            try { 
+                const r = await fetch(`${API_URL}/config`); 
+                const d = await r.json(); 
+                botName = d.botName || 'دانا';
+                CONFIG.topic = d.topic || 'games';
+                CONFIG.topicTitle = d.topicTitle || 'چت‌بات';
+                CONFIG.topicIcon = d.topicIcon || '🎮';
+                CONFIG.sidebarItems = d.sidebarItems || [];
+                CONFIG.quickActions = d.quickActions || [];
+            } catch(e) {}
+            
+            // Update UI from config
+            document.title = `${CONFIG.topicTitle} | hamidshariati.ir`;
+            document.querySelector('.chat-header-name').textContent = CONFIG.topicTitle;
+            document.querySelector('.message-system').textContent = `درخواستت رو بگو، ${botName} اجرا می‌کنه ${CONFIG.topicIcon}`;
+            
+            // Load sidebar items
+            loadSidebarItems();
+            
+            // Load quick actions
+            loadQuickActions();
+            
+            // Update new item button text based on topic
+            newItemText = getNewItemText();
+            const newItemEl = document.getElementById('new-item-text');
+            if (newItemEl) newItemEl.textContent = newItemText;
+            
+            setupVoice();
+            renderChatList();
+            messageInput.focus();
+        }
+
+        function loadSidebarItems() {
+            const gamesList = document.getElementById('games-list');
+            if (gamesList && CONFIG.sidebarItems.length > 0) {
+                gamesList.innerHTML = CONFIG.sidebarItems.map((item, i) => `
+                    <button class="game-link ${i === 0 ? 'selected' : ''}" data-target="${item.name}" onclick="selectTarget('${item.name}', '${item.icon} ${item.name}', '${item.url}')">
+                        <span class="game-icon">${item.icon}</span>
+                        <span class="game-name">${item.name}</span>
+                        <span class="game-check">✓</span>
+                    </button>
+                `).join('');
+                // Set first item as default
+                if (CONFIG.sidebarItems[0]) {
+                    currentTarget = { id: CONFIG.sidebarItems[0].name, name: `${CONFIG.sidebarItems[0].icon} ${CONFIG.sidebarItems[0].name}`, url: CONFIG.sidebarItems[0].url };
+                    selectedGames = [CONFIG.sidebarItems[0].name];
+                }
+            }
+        }
+
+        function loadQuickActions() {
+            const quickActionsEl = document.getElementById('quick-actions');
+            if (quickActionsEl && CONFIG.quickActions.length > 0) {
+                quickActionsEl.innerHTML = CONFIG.quickActions.map(action => 
+                    `<button class="quick-btn" data-msg="${action}">${action}</button>`
+                ).join('');
+                
+                document.querySelectorAll('.quick-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        messageInput.value = btn.dataset.msg;
+                        messageInput.dispatchEvent(new Event('input'));
+                        messageInput.focus();
+                    });
+                });
+            }
+        }
+        init();
+
+        // ========== PWA ==========
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/games/sw.js').catch(() => {});
+        }
+    </script>
+<script src="https://health.adlr.ir/bug-report/widget.js" defer></script>
+</body>
+</html>

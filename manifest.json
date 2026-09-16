@@ -1,0 +1,22 @@
+{
+  "name": "چت‌بات ارتقاء بازی",
+  "short_name": "دانا",
+  "description": "دستیار هوشمند ارتقاء بازی‌ها",
+  "start_url": "/games/upgrade-chat.html",
+  "display": "standalone",
+  "background_color": "#0f0f23",
+  "theme_color": "#0f0f23",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/games/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/games/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
